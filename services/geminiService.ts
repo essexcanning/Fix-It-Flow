@@ -235,7 +235,7 @@ export const getRefinementSuggestions = async (
 /**
  * Searches for replacement product information using Google Search grounding.
  */
-export const searchForReplacement = async (objectName: string): Promise<{ summary: string; options: Array<{ retailer: string, product: string, price: string }>; sources: Array<{title: string, uri: string}> }> => {
+export const searchForReplacement = async (objectName: string): Promise<{ summary: string; options: Array<{ retailer: string, product: string, price: string, url: string }>; sources: Array<{title: string, uri: string}> }> => {
   const ai = getAI();
 
   // Attempt to get user location
@@ -248,8 +248,17 @@ export const searchForReplacement = async (objectName: string): Promise<{ summar
   }
 
   const prompt = `
-    Search for the current purchase price of a new "${objectName}".
+    Context: The user has a broken item identified as "${objectName}" and they want to give up and buy a NEW replacement.
+    
+    Task: Search for the current purchase price of a BRAND NEW, FULLY FUNCTIONAL version of this object.
+    
+    IMPORTANT: If the identified object name contains adjectives like "broken", "damaged", "smashed", "faulty", or "busted", you MUST ignore those adjectives for the search.
+    - Example 1: If object is "Broken Chair", search for "New Office Chair".
+    - Example 2: If object is "Flat Tire", search for "New Bicycle Tire".
+    - Example 3: If object is "Smashed Screen", search for "New Monitor".
+
     ${locationContext}
+    
     Find 3 specific buying options from major retailers available now.
     
     RETURN ONLY RAW JSON. NO MARKDOWN. NO CONVERSATIONAL TEXT.
@@ -257,7 +266,7 @@ export const searchForReplacement = async (objectName: string): Promise<{ summar
     {
       "summary": "A short sentence summarizing the price range.",
       "options": [
-        { "retailer": "Retailer Name", "product": "Product Name", "price": "Price with currency" }
+        { "retailer": "Retailer Name", "product": "Product Name", "price": "Price with currency", "url": "Direct link to the product page found in search" }
       ]
     }
   `;

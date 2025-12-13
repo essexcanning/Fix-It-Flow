@@ -17,7 +17,7 @@ const App: React.FC = () => {
   
   // Buy New Modal State
   const [showBuyModal, setShowBuyModal] = useState(false);
-  const [buyInfo, setBuyInfo] = useState<{ summary: string, options: { retailer: string, product: string, price: string }[], sources: { title: string, uri: string }[] } | null>(null);
+  const [buyInfo, setBuyInfo] = useState<{ summary: string, options: { retailer: string, product: string, price: string, url?: string }[], sources: { title: string, uri: string }[] } | null>(null);
   const [loadingBuyInfo, setLoadingBuyInfo] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -464,13 +464,21 @@ const App: React.FC = () => {
                        
                        <div className="space-y-3 mb-6">
                           {buyInfo.options.map((opt, i) => (
-                              <div key={i} className="bg-off-white border-2 border-black p-3 flex flex-col md:flex-row justify-between items-start md:items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white transition-colors gap-2 md:gap-0">
-                                  <div className="flex-1 pr-4">
-                                      <div className="font-black text-[10px] md:text-xs uppercase bg-banana inline-block px-1 border border-black mb-1">{opt.retailer}</div>
-                                      <div className="font-mono text-sm font-bold leading-tight">{opt.product}</div>
+                              <a 
+                                key={i} 
+                                href={opt.url || '#'} 
+                                target="_blank" 
+                                rel="noopener noreferrer" 
+                                className={`block bg-off-white border-2 border-black p-3 shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white transition-colors gap-2 md:gap-0 ${!opt.url ? 'pointer-events-none' : 'cursor-pointer'}`}
+                              >
+                                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                                      <div className="flex-1 pr-4">
+                                          <div className="font-black text-[10px] md:text-xs uppercase bg-banana inline-block px-1 border border-black mb-1">{opt.retailer}</div>
+                                          <div className="font-mono text-sm font-bold leading-tight group-hover:underline">{opt.product}</div>
+                                      </div>
+                                      <div className="font-black text-lg md:text-xl text-hot-pink whitespace-nowrap self-end md:self-center">{opt.price}</div>
                                   </div>
-                                  <div className="font-black text-lg md:text-xl text-hot-pink whitespace-nowrap self-end md:self-center">{opt.price}</div>
-                              </div>
+                              </a>
                           ))}
                        </div>
                        
