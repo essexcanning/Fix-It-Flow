@@ -1,5 +1,7 @@
 {
   "name": "Fix-It Flow",
   "description": "The Living User Manual. Upload a photo of anything broken, and get a step-by-step 2K visual guide on how to fix it using Gemini 3 and Nano Banana Pro.",
-  "requestFramePermissions": []
+  "requestFramePermissions": [
+    "geolocation"
+  ]
 }

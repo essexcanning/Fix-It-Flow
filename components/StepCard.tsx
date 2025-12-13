@@ -70,7 +70,7 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
 
   return (
     <div 
-        className={`flex-shrink-0 w-[85vw] md:w-[600px] h-full flex flex-col bg-white border-2 border-black shadow-hard-lg snap-center relative group overflow-hidden transition-transform duration-300 hover:rotate-0 hover:z-10 ${rotation}`}
+        className={`flex-shrink-0 w-[90vw] md:w-[600px] h-full flex flex-col bg-white border-2 border-black shadow-hard-lg snap-center relative group overflow-hidden transition-transform duration-300 hover:rotate-0 hover:z-10 ${rotation}`}
     >
       <style>{`
         @keyframes progress-loading {
@@ -85,18 +85,18 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
       `}</style>
 
       {/* Header */}
-      <div className="p-4 border-b-2 border-black flex justify-between items-center bg-banana">
+      <div className="p-3 md:p-4 border-b-2 border-black flex justify-between items-center bg-banana">
         <div className="flex items-center gap-3">
-          <span className="flex items-center justify-center w-8 h-8 border-2 border-black bg-white text-black font-black font-mono text-lg shadow-[2px_2px_0px_0px_#000]">
+          <span className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 border-2 border-black bg-white text-black font-black font-mono text-sm md:text-lg shadow-[2px_2px_0px_0px_#000]">
             {index + 1}
           </span>
-          <h3 className="font-bold text-lg text-black font-mono tracking-tight uppercase truncate max-w-[200px]">{step.title}</h3>
+          <h3 className="font-bold text-sm md:text-lg text-black font-mono tracking-tight uppercase truncate max-w-[140px] md:max-w-[200px]">{step.title}</h3>
         </div>
         
         {/* Gemini 3 Reasoning Toggle - Neo Pop Pink */}
         <button 
           onClick={() => setShowReasoning(!showReasoning)}
-          className={`px-3 py-1.5 border-2 border-black text-xs font-bold font-mono transition-all flex items-center gap-2 shadow-[2px_2px_0px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
+          className={`px-2 md:px-3 py-1 md:py-1.5 border-2 border-black text-[10px] md:text-xs font-bold font-mono transition-all flex items-center gap-2 shadow-[2px_2px_0px_0px_#000] active:translate-x-[1px] active:translate-y-[1px] active:shadow-none ${
             showReasoning 
             ? 'bg-hot-pink text-black' 
             : 'bg-white text-black hover:bg-gray-100'
@@ -107,23 +107,23 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
       </div>
 
       {/* Image Area */}
-      <div className="relative flex-grow bg-white flex items-center justify-center overflow-hidden min-h-[350px] group border-b-2 border-black">
+      <div className="relative flex-grow bg-white flex items-center justify-center overflow-hidden min-h-[250px] md:min-h-[350px] group border-b-2 border-black">
         {step.imageUrl ? (
           <img 
             src={step.imageUrl} 
             alt={step.title} 
-            className="w-full h-full object-contain p-8 mix-blend-multiply" 
+            className="w-full h-full object-contain p-4 md:p-8 mix-blend-multiply" 
           />
         ) : (
           <div className="flex flex-col items-center justify-center p-8 text-center w-full h-full bg-[#fcfcfc]">
             {/* Neo-Pop Loading State */}
             <div className="relative mb-8">
-                <div className="text-6xl animate-spin drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]" style={{animationDuration: '3s'}}>
+                <div className="text-4xl md:text-6xl animate-spin drop-shadow-[4px_4px_0px_rgba(0,0,0,1)]" style={{animationDuration: '3s'}}>
                   🍌
                 </div>
             </div>
             
-            <div className="w-48 h-8 border-4 border-black bg-white relative mb-4 shadow-hard overflow-hidden">
+            <div className="w-32 md:w-48 h-6 md:h-8 border-4 border-black bg-white relative mb-4 shadow-hard overflow-hidden">
                 <div 
                     className="h-full bg-hot-pink border-r-4 border-black" 
                     style={{
@@ -137,15 +137,15 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
                 }}></div>
             </div>
 
-            <p className="text-black font-black font-mono text-lg uppercase animate-pulse tracking-widest">
+            <p className="text-black font-black font-mono text-sm md:text-lg uppercase animate-pulse tracking-widest">
               RENDERING 2K...
             </p>
             
             <div className="mt-4 flex gap-2">
-                 <span className="text-[10px] font-bold bg-banana border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_#000] rotate-[-2deg]">
+                 <span className="text-[8px] md:text-[10px] font-bold bg-banana border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_#000] rotate-[-2deg]">
                     NANO BANANA PRO
                  </span>
-                 <span className="text-[10px] font-bold bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_#000] rotate-[2deg]">
+                 <span className="text-[8px] md:text-[10px] font-bold bg-white border-2 border-black px-2 py-1 shadow-[2px_2px_0px_0px_#000] rotate-[2deg]">
                     GEMINI 3
                  </span>
             </div>
@@ -197,15 +197,15 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
                   left: `${Math.max(0, Math.min(60, xmin))}%`, 
                 }}
              >
-                <div className="mt-6 ml-6 bg-white border-2 border-black p-4 max-w-xs shadow-hard relative">
+                <div className="mt-6 ml-6 bg-white border-2 border-black p-2 md:p-4 max-w-[200px] md:max-w-xs shadow-hard relative">
                    {/* Connector */}
                    <div className="absolute -top-4 -left-0 w-1 h-6 bg-black"></div>
                    <div className="absolute -top-4 -left-0 w-6 h-1 bg-black"></div>
                    
                    <div className="flex items-center gap-2 mb-2 bg-hot-pink border border-black inline-block px-2 py-0.5 transform -rotate-2">
-                      <span className="text-xs font-black text-black uppercase">GEMINI 3 LOGIC</span>
+                      <span className="text-[10px] md:text-xs font-black text-black uppercase">GEMINI 3 LOGIC</span>
                    </div>
-                   <p className="text-sm text-black font-mono leading-tight">
+                   <p className="text-xs md:text-sm text-black font-mono leading-tight">
                      {step.reasoning}
                    </p>
                 </div>
@@ -213,19 +213,19 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
           </div>
         )}
 
-        {/* Adjust View Button (Hover) */}
+        {/* Adjust View Button (Always visible on mobile, Hover on Desktop) */}
         {!isRefining && !showReasoning && !step.isGeneratingImage && step.imageUrl && (
-          <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-200">
+          <div className="absolute top-4 right-4 md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200">
             <div className="relative group/adjust">
                 <Button 
                   variant="secondary" 
                   onClick={handleOpenRefine}
-                  className="text-xs py-2"
+                  className="text-[10px] md:text-xs py-1.5 md:py-2"
                 >
                   ADJUST VIEW
                 </Button>
                 {/* Tooltip */}
-                <div className="absolute top-full right-0 mt-2 px-2 py-1 bg-black text-white text-[10px] font-mono font-bold whitespace-nowrap opacity-0 group-hover/adjust:opacity-100 transition-opacity pointer-events-none shadow-[2px_2px_0px_0px_#fff] z-50">
+                <div className="hidden md:block absolute top-full right-0 mt-2 px-2 py-1 bg-black text-white text-[10px] font-mono font-bold whitespace-nowrap opacity-0 group-hover/adjust:opacity-100 transition-opacity pointer-events-none shadow-[2px_2px_0px_0px_#fff] z-50">
                     Fine-tune this step's image
                 </div>
             </div>
@@ -234,11 +234,11 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
 
         {/* Refine Overlay */}
         {isRefining && (
-          <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center p-8 z-20 animate-in fade-in duration-200">
+          <div className="absolute inset-0 bg-white/95 flex flex-col items-center justify-center p-4 md:p-8 z-20 animate-in fade-in duration-200">
             <div className="w-full max-w-md space-y-4">
               <div className="flex justify-between items-end border-b-2 border-black pb-2">
-                  <h4 className="text-black font-black font-mono text-lg uppercase">Refine Visuals</h4>
-                  <span className="text-xs text-black font-bold bg-banana border border-black px-2 py-1 shadow-[2px_2px_0px_0px_#000]">AI TIPS</span>
+                  <h4 className="text-black font-black font-mono text-base md:text-lg uppercase">Refine Visuals</h4>
+                  <span className="text-[10px] md:text-xs text-black font-bold bg-banana border border-black px-2 py-1 shadow-[2px_2px_0px_0px_#000]">AI TIPS</span>
               </div>
               
               {/* Quick Chips Area */}
@@ -250,7 +250,7 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
                         <button 
                             key={idx}
                             onClick={() => handleChipClick(chip)}
-                            className="bg-white text-black hover:bg-hot-pink border border-black px-3 py-1 text-xs font-bold font-mono transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
+                            className="bg-white text-black hover:bg-hot-pink border border-black px-2 py-1 md:px-3 md:py-1 text-[10px] md:text-xs font-bold font-mono transition-colors shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-x-[2px] active:translate-y-[2px]"
                         >
                             {chip}
                         </button>
@@ -266,7 +266,7 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
                 value={refinePrompt}
                 onChange={(e) => setRefinePrompt(e.target.value)}
                 placeholder="e.g. ZOOM IN ON SCREW..."
-                className="w-full bg-off-white border-2 border-black p-4 text-black font-mono focus:bg-white focus:outline-none focus:shadow-hard text-sm h-32 resize-none"
+                className="w-full bg-off-white border-2 border-black p-4 text-black font-mono focus:bg-white focus:outline-none focus:shadow-hard text-sm h-24 md:h-32 resize-none"
                 autoFocus
               />
               <div className="flex gap-3 justify-end w-full">
@@ -283,13 +283,13 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
       </div>
 
       {/* Description & Action */}
-      <div className="p-6 bg-white flex-grow flex flex-col justify-between">
-        <p className="text-black font-medium text-base leading-relaxed mb-6 font-mono">
+      <div className="p-4 md:p-6 bg-white flex-grow flex flex-col justify-between">
+        <p className="text-black font-medium text-sm md:text-base leading-relaxed mb-4 md:mb-6 font-mono">
           {step.description}
         </p>
         
         <div className="flex justify-between items-center pt-4 border-t-2 border-black border-dashed">
-           <div className="text-xs font-mono text-gray-500 w-1/2 truncate uppercase">
+           <div className="text-[10px] md:text-xs font-mono text-gray-500 w-1/2 truncate uppercase">
               PROMPT: {step.visualPrompt}
            </div>
            
@@ -298,12 +298,12 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
                  variant="outline" 
                  onClick={() => onRegenerate(step.id)}
                  isLoading={step.isGeneratingImage}
-                 className="text-xs py-2 px-4"
+                 className="text-[10px] md:text-xs py-1.5 md:py-2 px-3 md:px-4"
                >
                  RETRY
                </Button>
                {/* Tooltip */}
-               <div className="absolute bottom-full right-0 mb-2 px-2 py-1 bg-black text-white text-[10px] font-mono font-bold whitespace-nowrap opacity-0 group-hover/retry:opacity-100 transition-opacity pointer-events-none shadow-[2px_2px_0px_0px_#000] z-50">
+               <div className="hidden md:block absolute bottom-full right-0 mb-2 px-2 py-1 bg-black text-white text-[10px] font-mono font-bold whitespace-nowrap opacity-0 group-hover/retry:opacity-100 transition-opacity pointer-events-none shadow-[2px_2px_0px_0px_#000] z-50">
                     Re-generate this step's image
                </div>
            </div>

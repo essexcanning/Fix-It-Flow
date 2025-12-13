@@ -25,6 +25,23 @@ export const promptApiKey = async (): Promise<void> => {
   }
 };
 
+const getUserLocation = (): Promise<{lat: number, lon: number} | null> => {
+  return new Promise((resolve) => {
+    if (!navigator.geolocation) {
+      resolve(null);
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lon: pos.coords.longitude }),
+      (err) => {
+        console.warn("Location access denied or failed.", err);
+        resolve(null);
+      },
+      { timeout: 5000 }
+    );
+  });
+};
+
 /**
  * Analyzes the uploaded image to identify the object.
  * Uses Gemini 3 Pro Preview for robust multimodal reasoning.
@@ -220,13 +237,29 @@ export const getRefinementSuggestions = async (
  */
 export const searchForReplacement = async (objectName: string): Promise<{ summary: string; options: Array<{ retailer: string, product: string, price: string }>; sources: Array<{title: string, uri: string}> }> => {
   const ai = getAI();
+
+  // Attempt to get user location
+  const location = await getUserLocation();
+  let locationContext = "";
+  if (location) {
+    locationContext = `The user is located at Latitude: ${location.lat}, Longitude: ${location.lon}. 
+    CRITICAL: Filter search results for retailers accessible in this location and display prices in the local currency. 
+    If the location implies a specific country (e.g. UK, US), prioritize stores from that country.`;
+  }
+
   const prompt = `
     Search for the current purchase price of a new "${objectName}".
+    ${locationContext}
     Find 3 specific buying options from major retailers available now.
     
-    Return a JSON object with:
-    1. 'summary': A sentence like "You could buy a brand new one for [PRICE RANGE] today."
-    2. 'options': An array of 3 buying options, each with 'retailer', 'product', and 'price'.
+    RETURN ONLY RAW JSON. NO MARKDOWN. NO CONVERSATIONAL TEXT.
+    Structure:
+    {
+      "summary": "A short sentence summarizing the price range.",
+      "options": [
+        { "retailer": "Retailer Name", "product": "Product Name", "price": "Price with currency" }
+      ]
+    }
   `;
 
   const response = await ai.models.generateContent({
@@ -234,28 +267,36 @@ export const searchForReplacement = async (objectName: string): Promise<{ summar
     contents: prompt,
     config: {
       tools: [{ googleSearch: {} }],
-      responseMimeType: "application/json",
-      responseSchema: {
-        type: Type.OBJECT,
-        properties: {
-          summary: { type: Type.STRING },
-          options: {
-            type: Type.ARRAY,
-            items: {
-              type: Type.OBJECT,
-              properties: {
-                retailer: { type: Type.STRING },
-                product: { type: Type.STRING },
-                price: { type: Type.STRING }
-              }
-            }
-          }
-        }
-      }
+      // Important: Do NOT use responseMimeType or responseSchema with googleSearch tool
     },
   });
 
-  const json = JSON.parse(response.text || "{}");
+  let text = response.text || "{}";
+  // Remove markdown code blocks if the model adds them despite instructions
+  text = text.replace(/```json/g, "").replace(/```/g, "").trim();
+
+  let json;
+  try {
+    json = JSON.parse(text);
+  } catch (e) {
+    // Attempt to extract JSON from conversational text using regex
+    const match = text.match(/\{[\s\S]*\}/);
+    if (match) {
+        try {
+            json = JSON.parse(match[0]);
+        } catch (e2) {
+            console.error("Parsing extracted JSON failed", e2);
+        }
+    }
+    
+    if (!json) {
+        console.error("Parsing search JSON failed, falling back", e);
+        // Best effort fallback: treat text as summary if it's not too long, otherwise generic message
+        const summaryText = text.length < 500 ? text : "Could not parse detailed pricing, please check the sources below.";
+        json = { summary: summaryText, options: [] };
+    }
+  }
+  
   const summary = json.summary || "Here are some buying options.";
   const options = json.options || [];
   

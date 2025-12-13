@@ -21,6 +21,7 @@ const App: React.FC = () => {
   const [loadingBuyInfo, setLoadingBuyInfo] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     // Check key on mount
@@ -134,176 +135,230 @@ const App: React.FC = () => {
     }
   };
 
+  const handleScroll = (direction: 'left' | 'right') => {
+    if (scrollContainerRef.current) {
+      const container = scrollContainerRef.current;
+      const itemWidth = container.firstElementChild?.clientWidth || 300;
+      // Mobile gap is 16px (1rem), Desktop is 32px (2rem). 
+      // Using a slightly larger scroll to ensure snap triggers comfortably.
+      const gap = window.innerWidth >= 768 ? 32 : 16;
+      const scrollAmount = direction === 'left' ? -(itemWidth + gap) : (itemWidth + gap);
+      container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
+    }
+  };
+
   const handleSharePDF = () => {
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
-    const margin = 20;
+    const margin = 15;
     const contentWidth = pageWidth - (margin * 2);
 
     // Styling Helpers
     const setBlack = () => doc.setTextColor(0, 0, 0);
     const setWhite = () => doc.setTextColor(255, 255, 255);
-    const setBanana = () => doc.setFillColor(255, 215, 0); // Gold/Banana
+    const setBanana = () => doc.setFillColor(255, 215, 0); // Gold
     const setPink = () => doc.setFillColor(255, 105, 180); // Hot Pink
+    const setOffWhite = () => doc.setFillColor(245, 245, 245);
+    
+    // Helper functions for drawing
+    const setFill = (r: number, g: number, b: number) => doc.setFillColor(r, g, b);
     
     // --- HEADER (Page 1) ---
-    doc.setLineWidth(0.5);
-    doc.setDrawColor(0, 0, 0); // Black borders
-    
-    // Yellow Header Banner
+    // Yellow Banner
     setBanana();
-    doc.rect(10, 10, pageWidth - 20, 35, 'FD'); // Fill + Draw
-    
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setDrawColor(0);
+    doc.setLineWidth(1.5);
+    doc.line(0, 40, pageWidth, 40);
+
+    // Title
     setBlack();
     doc.setFont("courier", "bold");
-    doc.setFontSize(28);
-    doc.text("FIX-IT FLOW", pageWidth / 2, 28, { align: "center" });
+    doc.setFontSize(32);
+    doc.text("FIX-IT FLOW", margin, 25);
     
-    doc.setFontSize(10);
-    doc.text("THE LIVING USER MANUAL // POWERED BY GEMINI 3", pageWidth / 2, 36, { align: "center" });
+    // Badge in Header
+    setFill(255, 255, 255);
+    doc.rect(pageWidth - margin - 80, 15, 80, 10, 'FD');
+    doc.setFontSize(8);
+    doc.text("POWERED BY GEMINI 3", pageWidth - margin - 40, 21, { align: "center" });
 
-    // --- METADATA CARD ---
+    // --- METADATA SECTION ---
     let yPos = 55;
     
-    // Subject Box
-    doc.setLineWidth(0.5);
-    doc.rect(margin, yPos, contentWidth, 20); // Frame
-    
-    // Label Badge (Black)
-    doc.setFillColor(0, 0, 0);
-    doc.rect(margin, yPos, 30, 6, 'F');
-    setWhite();
-    doc.setFontSize(7);
-    doc.text("SUBJECT", margin + 2, yPos + 4);
-    
-    // Content
+    // SUBJECT CALCULATION
+    doc.setFontSize(16);
     setBlack();
-    doc.setFontSize(14);
-    doc.text(objectName.toUpperCase(), margin + 5, yPos + 14);
-    
-    yPos += 25;
+    const subjectLines = doc.splitTextToSize(objectName.toUpperCase(), contentWidth - 10);
+    const subjectBoxHeight = Math.max(25, (subjectLines.length * 7) + 12);
 
-    // Mission Box
-    doc.rect(margin, yPos, contentWidth, 20); // Frame
-    
-    // Label Badge (Pink)
-    setPink();
-    doc.rect(margin, yPos, 30, 6, 'FD');
+    // Subject Box - Shadow effect
+    setFill(0, 0, 0);
+    doc.rect(margin + 2, yPos + 2, contentWidth, subjectBoxHeight, 'F'); 
+    setFill(255, 255, 255);
+    doc.rect(margin, yPos, contentWidth, subjectBoxHeight, 'FD');
+
+    // "SUBJECT" Label
+    setFill(0, 0, 0);
+    doc.rect(margin, yPos - 3, 30, 6, 'F');
+    setWhite();
+    doc.setFontSize(8);
+    doc.text("SUBJECT", margin + 15, yPos + 1, { align: "center" });
+
+    // Subject Text
     setBlack();
-    doc.setFontSize(7);
-    doc.text("MISSION", margin + 2, yPos + 4);
+    doc.setFontSize(16);
+    doc.text(subjectLines, margin + 5, yPos + 16);
+    
+    yPos += subjectBoxHeight + 10;
+
+    // MISSION CALCULATION
+    doc.setFontSize(12);
+    const missionLines = doc.splitTextToSize(userGoal.toUpperCase(), contentWidth - 10);
+    const missionBoxHeight = Math.max(20, (missionLines.length * 6) + 12);
+
+    // Mission Box - Shadow effect
+    setFill(0, 0, 0);
+    doc.rect(margin + 2, yPos + 2, contentWidth, missionBoxHeight, 'F');
+    setFill(255, 255, 255);
+    doc.rect(margin, yPos, contentWidth, missionBoxHeight, 'FD');
+    
+    // "MISSION" Label (Pink)
+    setPink();
+    doc.rect(margin, yPos - 3, 30, 6, 'FD');
+    setBlack();
+    doc.setFontSize(8);
+    doc.text("MISSION", margin + 15, yPos + 1, { align: "center" });
     
     // Content
-    doc.setFontSize(14);
-    doc.text(userGoal.toUpperCase(), margin + 5, yPos + 14);
+    doc.setFontSize(12);
+    doc.text(missionLines, margin + 5, yPos + 13);
     
-    yPos += 35;
+    yPos += missionBoxHeight + 15;
     
     // --- STEPS ---
     steps.forEach((step, index) => {
-        // Rough height calculation to check for page break
-        // Image height (approx 70mm) + text padding
-        const estimatedBlockHeight = step.imageUrl ? 90 : 40;
-        
-        if (yPos + estimatedBlockHeight > pageHeight - 20) {
+        const imgH = 80;
+        const textH = 60; 
+        const blockHeight = Math.max(imgH, textH) + 20;
+
+        // Page break check
+        if (yPos + blockHeight > pageHeight - 20) {
             doc.addPage();
-            yPos = 20;
+            yPos = 30;
+            
+            // Mini Header
+            setBanana();
+            doc.rect(0, 0, pageWidth, 15, 'F');
+            doc.setDrawColor(0);
+            doc.line(0, 15, pageWidth, 15);
+            setBlack();
+            doc.setFontSize(10);
+            doc.text(`FIX-IT FLOW // ${objectName.toUpperCase()}`, margin, 10);
         }
 
-        // Separator Line
-        doc.setLineWidth(1.5);
-        doc.setDrawColor(0);
-        doc.line(margin, yPos, pageWidth - margin, yPos);
-        yPos += 10;
-        
+        // --- Step Header ---
         // Step Number Badge
-        doc.setFillColor(0, 0, 0);
-        doc.rect(margin, yPos, 10, 10, 'F');
+        setFill(0, 0, 0);
+        doc.rect(margin, yPos, 14, 14, 'F');
         setWhite();
         doc.setFontSize(12);
-        doc.text((index + 1).toString(), margin + 5, yPos + 7, { align: "center" });
-        
-        // Title
-        setBlack();
-        doc.setFontSize(14);
         doc.setFont("courier", "bold");
-        doc.text(step.title.toUpperCase(), margin + 14, yPos + 7);
+        doc.text((index + 1).toString(), margin + 7, yPos + 10, { align: "center" });
         
-        yPos += 15;
+        // Title Strip
+        setOffWhite();
+        doc.rect(margin + 14, yPos, contentWidth - 14, 14, 'F');
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.rect(margin + 14, yPos, contentWidth - 14, 14, 'S');
+
+        setBlack();
+        doc.setFontSize(12);
+        doc.text(step.title.toUpperCase(), margin + 20, yPos + 9);
         
-        // Layout: Image Left, Text Right (if image exists)
+        yPos += 20;
+        
+        // --- Step Content ---
+        const imageWidth = 90;
+        let finalSectionHeight = 0;
+
         if (step.imageUrl) {
              try {
                  const imgProps = doc.getImageProperties(step.imageUrl);
-                 const pdfImgWidth = 80;
-                 const pdfImgHeight = (imgProps.height * pdfImgWidth) / imgProps.width;
+                 const pdfImgHeight = (imgProps.height * imageWidth) / imgProps.width;
+                 
+                 // Image Shadow
+                 setFill(0, 0, 0);
+                 doc.rect(margin + 2, yPos + 2, imageWidth, pdfImgHeight, 'F');
                  
                  // Image Frame
-                 doc.addImage(step.imageUrl, 'PNG', margin, yPos, pdfImgWidth, pdfImgHeight);
-                 doc.setLineWidth(0.5);
-                 doc.rect(margin, yPos, pdfImgWidth, pdfImgHeight); // Border
+                 doc.addImage(step.imageUrl, 'PNG', margin, yPos, imageWidth, pdfImgHeight);
+                 doc.setDrawColor(0);
+                 doc.setLineWidth(1);
+                 doc.rect(margin, yPos, imageWidth, pdfImgHeight, 'S'); // Border
                  
-                 // Text Column
-                 const textX = margin + pdfImgWidth + 8;
-                 const textW = contentWidth - pdfImgWidth - 8;
-                 let textY = yPos;
-                 
-                 // Description
-                 doc.setFontSize(9);
-                 doc.setFont("courier", "normal");
-                 const descLines = doc.splitTextToSize(step.description, textW);
-                 doc.text(descLines, textX, textY + 3);
-                 
-                 textY += (descLines.length * 4) + 8;
-                 
-                 // Reasoning (Pink highlight)
-                 const reasoningLines = doc.splitTextToSize(step.reasoning, textW - 4);
-                 const boxH = (reasoningLines.length * 3.5) + 8;
-                 
-                 setPink();
-                 doc.rect(textX, textY, textW, boxH, 'FD');
-                 
-                 setBlack();
-                 doc.setFontSize(7);
-                 doc.setFont("courier", "bold");
-                 doc.text("WHY:", textX + 2, textY + 4);
-                 
-                 doc.setFontSize(8);
-                 doc.setFont("courier", "normal");
-                 doc.text(reasoningLines, textX + 2, textY + 9);
-                 
-                 // Update Y to below longest element
-                 yPos += Math.max(pdfImgHeight, (textY + boxH - yPos)) + 10;
+                 finalSectionHeight = pdfImgHeight;
 
              } catch (e) {
-                 // Fallback if image fails
-                 doc.text("[Image Generation Failed]", margin, yPos);
-                 yPos += 10;
+                 finalSectionHeight = 20;
              }
         } else {
-             // Text only layout
-             doc.setFontSize(10);
-             doc.setFont("courier", "normal");
-             const descLines = doc.splitTextToSize(step.description, contentWidth);
-             doc.text(descLines, margin, yPos);
-             yPos += (descLines.length * 5) + 10;
+             finalSectionHeight = 0;
         }
+
+        // Text Column
+        const textX = margin + imageWidth + 10;
+        const textW = contentWidth - imageWidth - 10;
+        let textY = yPos;
+        
+        // Description
+        doc.setFontSize(10);
+        doc.setFont("courier", "normal");
+        setBlack();
+        const descLines = doc.splitTextToSize(step.description, textW);
+        doc.text(descLines, textX, textY + 5);
+        
+        textY += (descLines.length * 5) + 10;
+        
+        // Reasoning (Pink Box)
+        const reasoningLines = doc.splitTextToSize(step.reasoning, textW - 6);
+        const boxH = (reasoningLines.length * 4) + 12;
+        
+        // Pink Box Shadow
+        setFill(0, 0, 0);
+        doc.rect(textX + 1, textY + 1, textW, boxH, 'F');
+        // Pink Box Main
+        setPink();
+        doc.setDrawColor(0);
+        doc.setLineWidth(0.5);
+        doc.rect(textX, textY, textW, boxH, 'FD');
+        
+        // "WHY?" Label
+        setBlack();
+        doc.setFontSize(8);
+        doc.setFont("courier", "bold");
+        doc.text("GEMINI LOGIC:", textX + 3, textY + 6);
+        
+        doc.setFont("courier", "normal");
+        doc.text(reasoningLines, textX + 3, textY + 12);
+        
+        textY += boxH;
+        
+        // Advance Y pos based on the taller of Image or Text
+        yPos += Math.max(finalSectionHeight, textY - yPos) + 15;
     });
     
-    // Page Numbers & Footer borders
-    const pageCount = doc.internal.getNumberOfPages();
+    // Page Numbers Footer
+    // Using internal.pages.length - 1 to get page count safely in 2.5.1
+    const pageCount = doc.internal.pages.length - 1;
     for(let i = 1; i <= pageCount; i++) {
         doc.setPage(i);
-        // Page Border
-        doc.setLineWidth(1);
-        doc.setDrawColor(0);
-        doc.rect(5, 5, pageWidth - 10, pageHeight - 10);
-        
-        // Footer Text
         doc.setFontSize(8);
         setBlack();
-        doc.text(`FIX-IT FLOW // PAGE ${i} OF ${pageCount}`, pageWidth / 2, pageHeight - 8, { align: "center" });
+        doc.text(`PAGE ${i} OF ${pageCount}`, pageWidth - margin, pageHeight - 10, { align: "right" });
+        doc.text(`GENERATED BY NANO BANANA PRO`, margin, pageHeight - 10);
     }
     
     doc.save(`fix-it-flow-${objectName.replace(/\s+/g, '-').toLowerCase()}.pdf`);
@@ -313,30 +368,30 @@ const App: React.FC = () => {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center p-6 relative overflow-hidden bg-[#F0F0F0]">
         
-        <div className="relative z-10 max-w-md text-center space-y-8 bg-white p-10 border-4 border-black shadow-hard-xl">
-          <div className="w-24 h-24 bg-banana border-4 border-black mx-auto flex items-center justify-center text-black mb-6 shadow-hard">
-            <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+        <div className="relative z-10 max-w-md w-full text-center space-y-6 md:space-y-8 bg-white p-6 md:p-10 border-4 border-black shadow-hard-xl">
+          <div className="w-16 h-16 md:w-24 md:h-24 bg-banana border-4 border-black mx-auto flex items-center justify-center text-black mb-4 md:mb-6 shadow-hard">
+            <svg className="w-8 h-8 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
           </div>
           <div>
-            <h1 className="text-5xl font-black tracking-tighter text-black mb-4 uppercase italic">Fix-It Flow</h1>
-            <p className="text-black font-mono border-y-2 border-black py-4">
+            <h1 className="text-3xl md:text-5xl font-black tracking-tighter text-black mb-4 uppercase italic">Fix-It Flow</h1>
+            <p className="text-black font-mono border-y-2 border-black py-4 text-sm md:text-base">
               THE LIVING USER MANUAL.<br/>
               [POWERED BY GEMINI 3]
             </p>
           </div>
           <div className="pt-2">
-             <Button onClick={handleConnect} className="w-full text-lg">
+             <Button onClick={handleConnect} className="w-full text-base md:text-lg">
                INSERT COIN (API KEY)
              </Button>
-             <p className="mt-6 text-xs text-gray-500 font-mono">
+             <p className="mt-4 md:mt-6 text-[10px] md:text-xs text-gray-500 font-mono">
                * PAID G-CLOUD PROJECT REQUIRED FOR NANO BANANA PRO.
              </p>
           </div>
         </div>
         
         {/* Footer Badge for Landing Page */}
-        <div className="absolute bottom-0 left-0 right-0 py-4 text-center bg-banana border-t-4 border-black">
-          <p className="text-xs text-black uppercase tracking-widest font-black font-mono">
+        <div className="absolute bottom-0 left-0 right-0 py-3 md:py-4 text-center bg-banana border-t-4 border-black">
+          <p className="text-[10px] md:text-xs text-black uppercase tracking-widest font-black font-mono">
              Powered by the magical wizardry of Nano Banana Pro & Gemini 3
           </p>
         </div>
@@ -345,16 +400,16 @@ const App: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen font-sans flex flex-col overflow-hidden relative">
+    <div className="h-screen font-sans flex flex-col overflow-hidden relative">
       <Mascot appState={appState} hasKey={hasKey} />
 
       {/* Navbar */}
-      <header className="h-24 bg-white border-b-4 border-black flex items-center px-8 justify-between z-40 sticky top-0 shadow-hard">
-        <div className="flex items-center gap-4 cursor-pointer group" onClick={handleReset}>
-          <div className="w-12 h-12 bg-banana border-2 border-black flex items-center justify-center text-black shadow-[2px_2px_0px_0px_#000] group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none transition-all">
-             <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
+      <header className="h-16 md:h-24 bg-white border-b-4 border-black flex items-center px-4 md:px-8 justify-between z-40 sticky top-0 shadow-hard shrink-0">
+        <div className="flex items-center gap-3 md:gap-4 cursor-pointer group" onClick={handleReset}>
+          <div className="w-8 h-8 md:w-12 md:h-12 bg-banana border-2 border-black flex items-center justify-center text-black shadow-[2px_2px_0px_0px_#000] group-hover:translate-x-1 group-hover:translate-y-1 group-hover:shadow-none transition-all">
+             <svg className="w-4 h-4 md:w-6 md:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="3" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.384-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path></svg>
           </div>
-          <span className="font-black italic tracking-tighter text-3xl text-black uppercase">Fix-It Flow</span>
+          <span className="font-black italic tracking-tighter text-xl md:text-3xl text-black uppercase">Fix-It Flow</span>
         </div>
         {uploadedImage && (
            <div className="hidden md:flex items-center gap-6 text-sm font-bold text-black bg-white border-2 border-black px-6 py-2 shadow-[4px_4px_0px_0px_rgba(0,0,0,1)]">
@@ -368,53 +423,53 @@ const App: React.FC = () => {
       </header>
 
       {/* Main Content Area */}
-      <main className="flex-grow relative flex flex-col p-4">
+      <main className="flex-grow relative flex flex-col p-2 md:p-4 overflow-hidden">
         
         {/* Error Banner */}
         {error && (
-          <div className="absolute top-6 left-1/2 transform -translate-x-1/2 bg-hot-pink text-black px-6 py-4 border-4 border-black shadow-hard-lg z-50 flex items-center gap-4 animate-in slide-in-from-top-4">
-            <span className="font-bold font-mono uppercase">ERROR: {error}</span>
-            <button onClick={() => setError(null)} className="font-black hover:scale-125 transition-transform">X</button>
+          <div className="absolute top-6 left-1/2 transform -translate-x-1/2 w-[90%] md:w-auto bg-hot-pink text-black px-4 md:px-6 py-3 md:py-4 border-4 border-black shadow-hard-lg z-50 flex items-center justify-between gap-4 animate-in slide-in-from-top-4">
+            <span className="font-bold font-mono uppercase text-xs md:text-base">ERROR: {error}</span>
+            <button onClick={() => setError(null)} className="font-black hover:scale-125 transition-transform px-2">X</button>
           </div>
         )}
         
         {/* Buy New Modal */}
         {showBuyModal && (
-           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200">
-             <div className="bg-white border-4 border-black p-8 w-full max-w-lg shadow-hard-xl relative animate-in zoom-in-95 duration-200">
-                <div className="absolute -top-6 -right-6">
+           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm animate-in fade-in duration-200 p-4">
+             <div className="bg-white border-4 border-black p-4 md:p-8 w-full max-w-lg shadow-hard-xl relative animate-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+                <div className="absolute top-2 right-2 md:-top-6 md:-right-6">
                     <button 
                         onClick={() => setShowBuyModal(false)} 
-                        className="bg-hot-pink border-4 border-black w-12 h-12 flex items-center justify-center font-black text-xl hover:scale-110 transition-transform shadow-hard"
+                        className="bg-hot-pink border-4 border-black w-10 h-10 md:w-12 md:h-12 flex items-center justify-center font-black text-lg md:text-xl hover:scale-110 transition-transform shadow-hard"
                     >X</button>
                 </div>
                 
-                <div className="text-center mb-6 border-b-2 border-black pb-4">
-                    <h2 className="text-3xl font-black uppercase italic bg-banana inline-block px-2 transform -rotate-2 border border-black shadow-[2px_2px_0px_0px_#000]">
+                <div className="text-center mb-4 md:mb-6 border-b-2 border-black pb-4 mt-2 md:mt-0">
+                    <h2 className="text-xl md:text-3xl font-black uppercase italic bg-banana inline-block px-2 transform -rotate-2 border border-black shadow-[2px_2px_0px_0px_#000]">
                         Give up & Buy New?
                     </h2>
                 </div>
 
                 {loadingBuyInfo ? (
                    <div className="flex flex-col items-center justify-center py-8 gap-4">
-                       <div className="text-6xl animate-spin">🍌</div>
-                       <p className="font-mono font-bold animate-pulse">SCORING THE INTERNET...</p>
-                       <span className="text-xs bg-black text-white px-2 py-1 font-mono">USING GOOGLE SEARCH GROUNDING</span>
+                       <div className="text-4xl md:text-6xl animate-spin">🍌</div>
+                       <p className="font-mono font-bold animate-pulse text-sm md:text-base">SCORING THE INTERNET...</p>
+                       <span className="text-[10px] md:text-xs bg-black text-white px-2 py-1 font-mono">USING GOOGLE SEARCH GROUNDING</span>
                    </div>
                 ) : buyInfo ? (
                    <div className="space-y-4">
-                       <p className="font-mono font-bold text-lg mb-6 leading-relaxed border-b-2 border-black pb-4">
+                       <p className="font-mono font-bold text-sm md:text-lg mb-4 md:mb-6 leading-relaxed border-b-2 border-black pb-4">
                           {buyInfo.summary}
                        </p>
                        
                        <div className="space-y-3 mb-6">
                           {buyInfo.options.map((opt, i) => (
-                              <div key={i} className="bg-off-white border-2 border-black p-3 flex justify-between items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white transition-colors">
+                              <div key={i} className="bg-off-white border-2 border-black p-3 flex flex-col md:flex-row justify-between items-start md:items-center shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:bg-white transition-colors gap-2 md:gap-0">
                                   <div className="flex-1 pr-4">
-                                      <div className="font-black text-xs uppercase bg-banana inline-block px-1 border border-black mb-1">{opt.retailer}</div>
+                                      <div className="font-black text-[10px] md:text-xs uppercase bg-banana inline-block px-1 border border-black mb-1">{opt.retailer}</div>
                                       <div className="font-mono text-sm font-bold leading-tight">{opt.product}</div>
                                   </div>
-                                  <div className="font-black text-xl text-hot-pink whitespace-nowrap">{opt.price}</div>
+                                  <div className="font-black text-lg md:text-xl text-hot-pink whitespace-nowrap self-end md:self-center">{opt.price}</div>
                               </div>
                           ))}
                        </div>
@@ -450,8 +505,8 @@ const App: React.FC = () => {
 
         {/* State: IDLE / Upload */}
         {appState === AppState.IDLE && (
-          <div className="flex-grow flex flex-col items-center justify-center p-6 animate-in fade-in zoom-in duration-300">
-            <div className="w-full max-w-xl bg-white border-4 border-black p-12 text-center hover:bg-yellow-50 transition-all cursor-pointer group shadow-hard-xl active:shadow-none active:translate-x-1 active:translate-y-1"
+          <div className="flex-grow flex flex-col items-center justify-center p-4 md:p-6 animate-in fade-in zoom-in duration-300">
+            <div className="w-full max-w-xl bg-white border-4 border-black p-6 md:p-12 text-center hover:bg-yellow-50 transition-all cursor-pointer group shadow-hard-xl active:shadow-none active:translate-x-1 active:translate-y-1"
                  onClick={() => fileInputRef.current?.click()}>
               <input 
                 type="file" 
@@ -460,11 +515,11 @@ const App: React.FC = () => {
                 accept="image/*" 
                 onChange={handleFileUpload}
               />
-              <div className="w-32 h-32 bg-banana border-4 border-black rounded-full flex items-center justify-center mx-auto mb-8 group-hover:rotate-12 transition-transform text-black shadow-hard">
-                <svg className="w-16 h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+              <div className="w-20 h-20 md:w-32 md:h-32 bg-banana border-4 border-black rounded-full flex items-center justify-center mx-auto mb-6 md:mb-8 group-hover:rotate-12 transition-transform text-black shadow-hard">
+                <svg className="w-10 h-10 md:w-16 md:h-16" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
               </div>
-              <h2 className="text-4xl font-black text-black mb-3 uppercase italic transform -rotate-2">Upload Junk</h2>
-              <p className="text-black font-mono font-bold bg-hot-pink inline-block px-2 border border-black">WE'LL FIX IT IN POST (LITERALLY)</p>
+              <h2 className="text-2xl md:text-4xl font-black text-black mb-3 uppercase italic transform -rotate-2">Upload Junk</h2>
+              <p className="text-black font-mono text-xs md:text-base font-bold bg-hot-pink inline-block px-2 border border-black">WE'LL FIX IT IN POST (LITERALLY)</p>
             </div>
           </div>
         )}
@@ -489,26 +544,26 @@ const App: React.FC = () => {
 
         {/* State: Goal Input */}
         {appState === AppState.GOAL_INPUT && (
-          <div className="flex-grow flex flex-col items-center justify-center p-6 max-w-2xl mx-auto w-full">
-            <div className="bg-white p-10 border-4 border-black w-full animate-in slide-in-from-bottom-12 duration-500 shadow-hard-xl">
-              <div className="flex items-center gap-3 mb-6 -ml-14">
-                 <span className="bg-banana border-2 border-black text-black px-4 py-2 text-sm font-black uppercase shadow-hard transform -rotate-3">Identified</span>
-                 <h2 className="text-3xl font-black text-black uppercase underline decoration-4 decoration-hot-pink">{objectName}</h2>
+          <div className="flex-grow flex flex-col items-center justify-center p-4 md:p-6 max-w-2xl mx-auto w-full">
+            <div className="bg-white p-6 md:p-10 border-4 border-black w-full animate-in slide-in-from-bottom-12 duration-500 shadow-hard-xl">
+              <div className="flex flex-col md:flex-row items-start md:items-center gap-3 mb-6 md:-ml-14">
+                 <span className="bg-banana border-2 border-black text-black px-4 py-2 text-xs md:text-sm font-black uppercase shadow-hard transform -rotate-3 self-start md:self-auto">Identified</span>
+                 <h2 className="text-2xl md:text-3xl font-black text-black uppercase underline decoration-4 decoration-hot-pink break-words w-full">{objectName}</h2>
               </div>
               
-              <p className="text-black mb-8 text-xl font-bold font-mono">So, what's the plan?</p>
+              <p className="text-black mb-6 md:mb-8 text-lg md:text-xl font-bold font-mono">So, what's the plan?</p>
               
-              <div className="space-y-6">
+              <div className="space-y-4 md:space-y-6">
                 <input 
                   type="text" 
                   value={userGoal}
                   onChange={(e) => setUserGoal(e.target.value)}
                   placeholder="e.g. FIX THE FLAT, RESET IT..."
-                  className="w-full bg-off-white border-4 border-black p-6 text-black placeholder:text-gray-400 focus:bg-white focus:outline-none focus:shadow-hard text-xl font-mono uppercase"
+                  className="w-full bg-off-white border-4 border-black p-4 md:p-6 text-black placeholder:text-gray-400 focus:bg-white focus:outline-none focus:shadow-hard text-lg md:text-xl font-mono uppercase"
                   autoFocus
                   onKeyDown={(e) => e.key === 'Enter' && handleGoalSubmit()}
                 />
-                <Button onClick={handleGoalSubmit} className="w-full text-xl py-6 uppercase tracking-widest" disabled={!userGoal}>
+                <Button onClick={handleGoalSubmit} className="w-full text-lg md:text-xl py-4 md:py-6 uppercase tracking-widest" disabled={!userGoal}>
                   Generate Manual
                 </Button>
               </div>
@@ -526,8 +581,8 @@ const App: React.FC = () => {
                    <div className="w-6 h-6 bg-black animate-bounce" style={{animationDelay: '0.2s'}}></div>
                </div>
                <div className="bg-white border-2 border-black p-4 inline-block shadow-hard">
-                  <h2 className="text-3xl font-black text-black uppercase">Thinking...</h2>
-                  <p className="text-black font-mono">Gemini 3 is consulting the manual.</p>
+                  <h2 className="text-2xl md:text-3xl font-black text-black uppercase">Thinking...</h2>
+                  <p className="text-black font-mono text-sm md:text-base">Gemini 3 is consulting the manual.</p>
                </div>
             </div>
           </div>
@@ -536,7 +591,10 @@ const App: React.FC = () => {
         {/* State: Results (Horizontal Scroll) */}
         {appState === AppState.RESULTS && (
            <div className="flex-grow flex flex-col overflow-hidden">
-              <div className="flex-grow flex items-center overflow-x-auto overflow-y-hidden px-8 md:px-16 py-12 gap-8 no-scrollbar snap-x snap-mandatory pb-20">
+              <div 
+                  ref={scrollContainerRef}
+                  className="flex-grow flex items-center overflow-x-auto overflow-y-hidden px-4 md:px-16 py-6 md:py-12 gap-4 md:gap-8 no-scrollbar snap-x snap-mandatory pb-12 md:pb-20"
+              >
                  {steps.map((step, idx) => (
                     <StepCard 
                       key={step.id} 
@@ -548,12 +606,12 @@ const App: React.FC = () => {
                  ))}
                  
                  {/* End Card */}
-                 <div className="flex-shrink-0 w-[300px] h-full flex flex-col items-center justify-center bg-white border-4 border-black shadow-hard-lg snap-center text-center p-10 mx-4 rotate-2">
-                    <div className="w-24 h-24 bg-green-500 border-4 border-black rounded-full flex items-center justify-center mb-6 text-black shadow-hard">
-                       <svg className="w-12 h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
+                 <div className="flex-shrink-0 w-[90vw] md:w-[600px] h-full flex flex-col items-center justify-center bg-white border-4 border-black shadow-hard-lg snap-center text-center p-6 md:p-10 mx-2 md:mx-4 rotate-2">
+                    <div className="w-16 h-16 md:w-24 md:h-24 bg-green-500 border-4 border-black rounded-full flex items-center justify-center mb-4 md:mb-6 text-black shadow-hard">
+                       <svg className="w-8 h-8 md:w-12 md:h-12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="4" d="M5 13l4 4L19 7"></path></svg>
                     </div>
-                    <h3 className="text-3xl font-black text-black mb-2 uppercase italic">Mission Complete!</h3>
-                    <p className="mb-6 text-black font-mono text-sm">Download your custom manual.</p>
+                    <h3 className="text-2xl md:text-3xl font-black text-black mb-2 uppercase italic">Mission Complete!</h3>
+                    <p className="mb-6 text-black font-mono text-xs md:text-sm">Download your custom manual.</p>
                     
                     <div className="w-full space-y-3">
                         <Button variant="pink" onClick={handleSharePDF} className="w-full text-xs">
@@ -569,11 +627,43 @@ const App: React.FC = () => {
                  </div>
               </div>
               
-              {/* Progress Indicators */}
-              <div className="h-20 flex items-center justify-center gap-4 border-t-4 border-black bg-white z-30">
-                 {steps.map((_, idx) => (
-                    <div key={idx} className="w-4 h-4 border-2 border-black bg-gray-200 transition-colors hover:bg-hot-pink cursor-pointer"></div>
-                 ))}
+              {/* Progress Indicators & Nav Buttons */}
+              <div className="h-16 md:h-24 flex items-center px-4 md:px-12 border-t-4 border-black bg-white z-30 shrink-0 gap-4">
+                 
+                 {/* Navigation Controls Grouped Left */}
+                 <div className="flex items-center gap-3 shrink-0">
+                     <Button 
+                       variant="outline" 
+                       onClick={() => handleScroll('left')}
+                       className="w-12 h-12 !px-0 flex items-center justify-center text-2xl shadow-[2px_2px_0px_0px_#000] active:shadow-none bg-white hover:bg-off-white"
+                       aria-label="Previous Step"
+                     >
+                       ←
+                     </Button>
+
+                     <Button 
+                       variant="primary" 
+                       onClick={() => handleScroll('right')}
+                       className="w-12 h-12 !px-0 flex items-center justify-center text-2xl shadow-[2px_2px_0px_0px_#000] active:shadow-none"
+                       aria-label="Next Step"
+                     >
+                       →
+                     </Button>
+                 </div>
+                 
+                 {/* Centered Dots */}
+                 <div className="flex-grow flex justify-center overflow-hidden">
+                     <div className="flex items-center gap-2 md:gap-3 overflow-x-auto no-scrollbar px-2 py-2">
+                        {steps.map((_, idx) => (
+                           <div key={idx} className="w-3 h-3 md:w-4 md:h-4 border-2 border-black bg-gray-200 shrink-0"></div>
+                        ))}
+                        {/* End card dot */}
+                        <div className="w-3 h-3 md:w-4 md:h-4 border-2 border-black bg-gray-200 shrink-0"></div>
+                     </div>
+                 </div>
+
+                 {/* Spacer for Mascot (Right side) */}
+                 <div className="w-12 md:w-24 shrink-0"></div>
               </div>
            </div>
         )}
@@ -581,14 +671,11 @@ const App: React.FC = () => {
       </main>
 
       {/* Footer Badge */}
-      <div className="py-3 text-center bg-banana border-t-4 border-black shrink-0 relative z-30">
-          <p className="text-xs text-black uppercase tracking-widest font-black font-mono">
+      <div className="py-2 md:py-3 text-center bg-banana border-t-4 border-black shrink-0 relative z-30">
+          <p className="text-[10px] md:text-xs text-black uppercase tracking-widest font-black font-mono">
              Powered by the magical wizardry of Nano Banana Pro & Gemini 3
           </p>
       </div>
-
-      {/* Footer Badge */}
-      {/* Hidden in main app view to not clutter, shown on landing only via conditional logic in hasKey check above */}
       
       <style>{`
         @keyframes scan {
