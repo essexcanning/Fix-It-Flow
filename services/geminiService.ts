@@ -280,12 +280,13 @@ export const searchForReplacement = async (objectName: string): Promise<{ summar
     json = JSON.parse(text);
   } catch (e) {
     // Attempt to extract JSON from conversational text using regex
+    // This is necessary because models with tools sometimes output conversational text before the JSON
     const match = text.match(/\{[\s\S]*\}/);
     if (match) {
         try {
             json = JSON.parse(match[0]);
         } catch (e2) {
-            console.error("Parsing extracted JSON failed", e2);
+            console.error("Regex JSON parse failed", e2);
         }
     }
     
