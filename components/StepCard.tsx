@@ -85,7 +85,7 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
       `}</style>
 
       {/* Header */}
-      <div className="p-3 md:p-4 border-b-2 border-black flex justify-between items-center bg-banana">
+      <div className="p-3 md:p-4 border-b-2 border-black flex justify-between items-center bg-banana flex-shrink-0">
         <div className="flex items-center gap-3">
           <span className="flex items-center justify-center w-6 h-6 md:w-8 md:h-8 border-2 border-black bg-white text-black font-black font-mono text-sm md:text-lg shadow-[2px_2px_0px_0px_#000]">
             {index + 1}
@@ -106,8 +106,8 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
         </button>
       </div>
 
-      {/* Image Area */}
-      <div className="relative flex-grow bg-white flex items-center justify-center overflow-hidden min-h-[250px] md:min-h-[350px] group border-b-2 border-black">
+      {/* Image Area - Changed min-h to min-h-0 to allow shrinking if text needs space */}
+      <div className="relative flex-grow flex-shrink bg-white flex items-center justify-center overflow-hidden min-h-0 group border-b-2 border-black">
         {step.imageUrl ? (
           <img 
             src={step.imageUrl} 
@@ -282,8 +282,8 @@ export const StepCard: React.FC<StepCardProps> = ({ step, onRegenerate, onRefine
         )}
       </div>
 
-      {/* Description & Action */}
-      <div className="p-4 md:p-6 bg-white flex-grow flex flex-col justify-between">
+      {/* Description & Action - Changed to flex-shrink-0 to prioritize text visibility */}
+      <div className="p-4 md:p-6 bg-white flex-shrink-0 flex flex-col justify-between">
         <p className="text-black font-medium text-sm md:text-base leading-relaxed mb-4 md:mb-6 font-mono">
           {step.description}
         </p>
